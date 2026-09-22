@@ -1,0 +1,4 @@
+storage/raw
+storage/raw_test
+__pycache__/
+__init__.py
