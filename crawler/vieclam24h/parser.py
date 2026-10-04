@@ -1,6 +1,19 @@
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 import hashlib
+import re
+
+
+def get_source_job_id(url):
+    """Extract the posting ID; use a stable URL hash for unknown formats."""
+    parsed_url = urlsplit(url)
+    path = parsed_url.path.rstrip("/")
+    match = re.search(r"id(\d+)(?:\.html)?$", path)
+    if match:
+        return match.group(1)
+
+    canonical_url = f"{parsed_url.netloc.lower()}{path}"
+    return hashlib.sha256(canonical_url.encode("utf-8")).hexdigest()
 
 def get_text(soup, selector):
     element = soup.select_one(selector)
@@ -30,7 +43,7 @@ def parse_job_detail(html, url):
     job = {
         "source": "vieclam24h",
         "source_url": url,
-        "source_job_id": '001',
+        "source_job_id": get_source_job_id(url),
         "title": get_text(soup, "h1[class='text-24 font-bold leading-10 text-se-neutral-84 !font-medium']"),
         "company_name": get_text(soup, 'a div[class="text-18 font-medium leading-7 text-se-neutral-84 !font-medium text-center w-full sm_cv:text-left"]'),
         "job_location_raw": get_text(soup, "div[class='flex flex-col w-full gap-3'] div[class='flex flex-col gap-2 w-full']"),

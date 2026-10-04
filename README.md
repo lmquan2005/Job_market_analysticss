@@ -159,7 +159,7 @@ Repository hiện chứa ảnh minh họa dashboard; chưa có file báo cáo `.
 ## 9. Giới hạn hiện tại và hướng phát triển
 
 - Parser phụ thuộc vào cấu trúc HTML của website; thay đổi giao diện có thể khiến dữ liệu thiếu hoặc thu thập thất bại.
-- Parser cục bộ đang gán `source = "vietjobs"` và `source_job_id = "001"` cố định. Notebook Bronze đổi nguồn thành `vieclam24h`; cần hoàn thiện mã định danh trước khi sử dụng để phân biệt tin.
+- Parser lấy `source_job_id` từ phần `id< số >` ở cuối đường dẫn tin tuyển dụng (ví dụ `id200947717.html` → `200947717`). Nếu URL không có định dạng này, parser tạo mã SHA-256 từ tên miền và đường dẫn, bỏ qua tham số tracking và fragment. Các file dữ liệu cũ cần được thu thập hoặc xử lý lại để cập nhật mã định danh.
 - Chuẩn hóa lương hiện tập trung vào dạng khoảng `X - Y triệu`; chưa xử lý đầy đủ ngoại tệ, lương một phía hoặc kỳ trả lương khác nhau.
 - Phân nhóm nghề, cấp bậc và kỹ năng trong notebook dựa trên từ khóa, cần đánh giá thêm độ chính xác.
 - Lương công khai trong tin tuyển dụng chỉ phản ánh một phần dữ liệu thu thập, chưa đại diện cho toàn bộ thị trường.
