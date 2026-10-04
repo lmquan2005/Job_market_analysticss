@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+import hashlib
 
 def get_text(soup, selector):
     element = soup.select_one(selector)
@@ -27,7 +28,7 @@ def parse_job_detail(html, url):
     soup = BeautifulSoup(html, "html.parser")
 
     job = {
-        "source": "vietjobs",
+        "source": "vieclam24h",
         "source_url": url,
         "source_job_id": '001',
         "title": get_text(soup, "h1[class='text-24 font-bold leading-10 text-se-neutral-84 !font-medium']"),
