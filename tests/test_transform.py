@@ -1,10 +1,10 @@
 from transform.salary import normalize_salary
-
+from transform.location import normalize_location
 from tests.load_lastest_data import load_latest_raw
 from storage.test_transform import save_raw
 def transform_job(job):
     salary_min, salary_max, salary_currency = normalize_salary(job.get("salary_raw"))
-
+    city, address = normalize_location(job.get("job_location_raw"))
     transformed_job = {
         "source": job.get("source"),
         "source_url": job.get("source_url"),
@@ -12,6 +12,8 @@ def transform_job(job):
         "title": job.get("title"),
         "company_name": job.get("company_name"),
         "job_location": job.get("job_location_raw"),
+        "city": city,
+        "address": address,
         "salary_raw": job.get("salary_raw"),
         "salary_min": salary_min,
         "salary_max": salary_max,

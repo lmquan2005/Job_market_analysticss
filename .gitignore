@@ -1,4 +1,5 @@
 storage/raw
 storage/raw_test
+storage/transformed
 __pycache__/
 __init__.py
