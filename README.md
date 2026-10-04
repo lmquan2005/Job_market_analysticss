@@ -1,6 +1,6 @@
 # Job Market Analytics — Phân tích thị trường việc làm IT Việt Nam
 
-Dự án thu thập và phân tích dữ liệu tuyển dụng IT tại Việt Nam, nhằm tìm hiểu nhu cầu tuyển dụng theo địa phương, nhóm nghề, kỹ năng và mức lương. Dữ liệu được lấy từ Vieclam24h, lưu dưới dạng JSON, sau đó xử lý trên Databricks theo mô hình Bronze → Silver → Gold để phục vụ phân tích và trực quan hóa.
+Dự án thu thập và phân tích dữ liệu tuyển dụng IT tại Việt Nam, nhằm tìm hiểu nhu cầu tuyển dụng theo địa phương, nhóm nghề, kỹ năng và mức lương. Dữ liệu được lấy từ Vieclam24h, lưu dưới dạng JSON, sau đó xử lý trên Databricks theo luồng Bronze → Silver → Data Quality → Gold để phục vụ phân tích và trực quan hóa.
 
 ## 1. Mục tiêu
 
@@ -19,23 +19,24 @@ Dự án thu thập và phân tích dữ liệu tuyển dụng IT tại Việt N
 | Chuẩn hóa Python | Tách khoảng lương, chuẩn hóa tên thành phố và tách địa chỉ |
 | Bronze | Đọc JSON, bổ sung thời gian nạp dữ liệu và ghi bảng Delta `bronze_jobs` |
 | Silver | Chuẩn hóa lương, địa điểm; nhận diện tin IT, nhóm nghề và cấp bậc |
-| Gold | Tổng hợp số tin theo thành phố, nhóm nghề, mức lương và nhu cầu kỹ năng |
 | Data Quality | Kiểm tra trùng lặp, trường bắt buộc, khoảng lương và độ bao phủ kỹ năng |
+| Gold | Tổng hợp số tin theo thành phố, nhóm nghề, mức lương và nhu cầu kỹ năng sau bước kiểm tra chất lượng |
 | Tài liệu minh họa | Hình ảnh workflow Databricks và dashboard Power BI |
 
 ## 3. Luồng xử lý dữ liệu
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[Vieclam24h] --> B[Python crawler]
     B --> C[JSON]
     C --> D[Bronze: dữ liệu gốc]
     D --> E[Silver: dữ liệu chuẩn hóa]
-    E --> F[Gold: bảng phân tích]
+    E --> H[Data Quality: kiểm tra chất lượng]
+    H --> F[Gold: bảng phân tích]
     F --> G[Power BI / báo cáo]
-    E --> H[Kiểm tra chất lượng]
-    F --> H
 ```
+
+Bronze lưu dữ liệu gốc; Silver chuẩn hóa dữ liệu; Data Quality kiểm tra dữ liệu trước khi chuyển sang Gold. Chỉ tiếp tục bước Gold khi các kiểm tra mức `ERROR` đều đạt. Gold tạo các bảng tổng hợp phục vụ dashboard và báo cáo.
 
 Các bảng phân tích chính:
 
@@ -53,7 +54,7 @@ Các bảng phân tích chính:
 - **Power BI**: trực quan hóa kết quả phân tích.
 - **pytest**: kiểm thử các hàm xử lý dữ liệu.
 
-`requirement.txt` chứa các thư viện cho phần Python cục bộ. Các notebook sử dụng môi trường Databricks có Spark và Delta Lake.
+`requirements.txt` chứa các thư viện cho phần Python cục bộ. Các notebook sử dụng môi trường Databricks có Spark và Delta Lake.
 
 ## 5. Cấu trúc dự án
 
@@ -86,7 +87,7 @@ Job_market_analysticss/
 ├── dashboard/powerbi_dashboard.png
 ├── docs/databricks_workflow.png
 ├── main.py
-├── requirement.txt
+├── requirements.txt
 ├── PROJECT_DESIGN.md
 └── README.md
 ```
@@ -102,7 +103,7 @@ Sử dụng Python **3.10 trở lên**. Chạy các lệnh từ thư mục gốc
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirement.txt
+python -m pip install -r requirements.txt
 ```
 
 ### Thu thập thử một trang
@@ -139,10 +140,12 @@ python -m pytest tests/test_location.py -q
 2. Import các notebook trong `notebooks/` vào workspace Databricks.
 3. Sửa đường dẫn JSON trong `01_bronze_ingestion.ipynb` thành đường dẫn Volume của bạn; đường dẫn hiện tại trỏ đến một file mẫu cụ thể.
 4. Chọn compute hỗ trợ PySpark và Delta Lake, đồng thời cấu hình catalog/schema có quyền tạo bảng.
-5. Chạy lần lượt: `01_bronze_ingestion` → `02_silver_transform` → `03_gold_analytics` → `data_quality`.
+5. Chạy theo thứ tự: `01_bronze_ingestion` → `02_silver_transform` → `data_quality` → `03_gold_analytics`.
 6. Sử dụng các bảng Gold để xây dựng báo cáo hoặc kết nối Power BI.
 
 Các notebook hiện ghi bảng bằng chế độ `overwrite`: mỗi lần chạy sẽ thay thế dữ liệu của bảng đích. Notebook chất lượng dữ liệu sẽ phát sinh lỗi nếu có kiểm tra mức `ERROR` thất bại.
+
+**Lưu ý về mã notebook hiện tại:** `data_quality.ipynb` đang đọc cả bảng `job_skills`, trong khi bảng này được tạo trong `03_gold_analytics.ipynb`. Để chạy đúng thứ tự trên ngay từ lần đầu, cần chuyển phần tạo `job_skills` sang bước Silver hoặc điều chỉnh kiểm tra độ bao phủ kỹ năng để không phụ thuộc vào đầu ra Gold.
 
 ## 8. Hình ảnh minh họa
 
